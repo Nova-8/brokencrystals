@@ -1,16 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-
-const xpath = require('xpath');
-const dom = require('xmldom').DOMParser;
-
+import { DOMParser } from '@xmldom/xmldom';
+import xpath, { SelectReturnType } from 'xpath';
 
 @Injectable()
 export class PartnersService {
   private readonly logger = new Logger(PartnersService.name);
 
   private readonly XML_HEADER = '<?xml version="1.0" encoding="UTF-8"?>';
-  private readonly XML_AUTHORS_STR: string = `
-  ${this.XML_HEADER}
+  private readonly XML_AUTHORS_STR: string = `${this.XML_HEADER}
     <partners>
       <partner>
         <name>Walter White</name>
@@ -54,13 +51,18 @@ export class PartnersService {
     </partners>
   `;
 
-  private getPartnersXMLObj(): object {
-    let partnersXMLObj = new dom().parseFromString(this.XML_AUTHORS_STR, 'text/xml');
-    return partnersXMLObj;
+  private getPartnersXMLObj(): Node {
+    const partnersXMLObj = new DOMParser().parseFromString(
+      this.XML_AUTHORS_STR,
+      'text/xml'
+    );
+    return partnersXMLObj as unknown as Node;
   }
 
-  private selectPartnerPropertiesByXPATH(xpathExpression: string): Array<string> {
-    let partnersXMLObj = this.getPartnersXMLObj();
+  private selectPartnerPropertiesByXPATH(
+    xpathExpression: string
+  ): SelectReturnType {
+    const partnersXMLObj = this.getPartnersXMLObj();
     return xpath.select(xpathExpression, partnersXMLObj);
   }
 
@@ -72,8 +74,10 @@ export class PartnersService {
     let xmlNodes = this.selectPartnerPropertiesByXPATH(xpathExpression);
 
     if (!Array.isArray(xmlNodes)) {
-      this.logger.debug(`xmlNodes's type wasn't 'Array', and it's value was: ${xmlNodes}`)
-      xmlNodes = Array();
+      this.logger.debug(
+        `xmlNodes's type wasn't 'Array', and it's value was: ${xmlNodes}`
+      );
+      xmlNodes = [];
     } else {
       this.logger.debug(`Raw xpath xmlNodes value is: ${xmlNodes}`);
     }
